@@ -81,18 +81,20 @@ VOLUME \
 	/app/tmp \
 	/app/ebooks
 
-COPY ebook2audiobook.command /app/ebook2audiobook.sh
-RUN chmod +x /app/ebook2audiobook.sh
-
 COPY . /app
 
-# Ensure Unix line endings
-RUN find /app -type f \( -name "*.sh" -o -name "*.command" \) -exec sed -i 's/\r$//' {} \;
+# Ensure Unix line endings and make all scripts executable
+RUN find /app -type f \( -name "*.sh" -o -name "*.command" \) -exec sed -i 's/\r$//' {} \; && \
+    chmod +x /app/ebook2audiobook.command /app/ebook2audiobook.sh
+
+# Verify script exists and is readable
+RUN ls -lah /app/ebook2audiobook.command /app/ebook2audiobook.sh && \
+    head -c 100 /app/ebook2audiobook.command
 
 # ------------------------------------------------------------
 # Build dependencies via project script
 # ------------------------------------------------------------
-RUN ./ebook2audiobook.command --script_mode build_docker --docker_device "${DOCKER_DEVICE_STR}"
+RUN bash -x /app/ebook2audiobook.command --script_mode build_docker --docker_device "${DOCKER_DEVICE_STR}"
 
 # ------------------------------------------------------------
 # Cleanup
